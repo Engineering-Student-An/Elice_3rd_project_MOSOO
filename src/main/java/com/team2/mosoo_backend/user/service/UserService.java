@@ -7,9 +7,11 @@ import com.team2.mosoo_backend.exception.ErrorCode;
 import com.team2.mosoo_backend.user.dto.UserInfoRequestDto;
 import com.team2.mosoo_backend.user.dto.UserListResponse;
 import com.team2.mosoo_backend.user.dto.UserResponseDto;
+import com.team2.mosoo_backend.user.entity.Gosu;
 import com.team2.mosoo_backend.user.entity.Users;
 import com.team2.mosoo_backend.user.entity.UserInfo;
 import com.team2.mosoo_backend.user.mapper.UserMapper;
+import com.team2.mosoo_backend.user.repository.GosuRepository;
 import com.team2.mosoo_backend.user.repository.UserInfoRepository;
 import com.team2.mosoo_backend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final SecurityUtil securityUtil;
+    private final GosuRepository gosuRepository;
 
     // 맴버 정보 조회
     public UserResponseDto getMyInfoBySecurity(long userId) {
@@ -71,11 +74,23 @@ public class UserService {
     }
 
 
-    @Transactional
-    public UserResponseDto deleteMember(){
-        Long memberId = securityUtil.getCurrentMemberId();
-        Users users = userRepository.findById(memberId)
+    public UserResponseDto deleteUser(Long userId){
+        Users users = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        // userInfoId 데이터 삭제
+        UserInfo userInfo = userInfoRepository.findByUsersId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        if (userInfo.getId() != null) {
+            userInfoRepository.deleteById(userInfo.getId());
+        }
+        // isGosu가 true 일 경우 GosuInfoId 삭제
+        if (userInfo.getIsGosu()) {
+            Gosu gosu = gosuRepository.findByUserInfoId(userInfo.getId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            if (gosu.getId() != null) {
+                gosuRepository.deleteById(gosu.getId());
+            }
+        }
         userRepository.delete(users);
         return userMapper.userToResponse(users);
     }

@@ -19,6 +19,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     @Query("SELECT c FROM ChatRoom c " +
                 "WHERE (c.gosuId = :id AND c.gosuDeletedAt IS null) " +
-                        "OR (c.userId = :id AND c.userDeletedAt IS null)")
+                "OR (c.userId = :id AND c.userDeletedAt IS null)" +
+                "ORDER BY c.lastChatDate DESC")
     Page<ChatRoom> findActiveChatRoomsByUserId(Pageable pageable, @Param(value = "id") Long id);
 }

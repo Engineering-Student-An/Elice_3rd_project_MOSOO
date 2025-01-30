@@ -8,10 +8,7 @@ import com.team2.mosoo_backend.chatting.repository.ChatRoomRepository;
 import com.team2.mosoo_backend.config.SecurityUtil;
 import com.team2.mosoo_backend.exception.CustomException;
 import com.team2.mosoo_backend.exception.ErrorCode;
-import com.team2.mosoo_backend.order.dto.OrderDetailsResponseDto;
-import com.team2.mosoo_backend.order.dto.OrderListResponseDto;
-import com.team2.mosoo_backend.order.dto.OrderResponseDto;
-import com.team2.mosoo_backend.order.dto.OrderStatusUpdateResponseDto;
+import com.team2.mosoo_backend.order.dto.*;
 import com.team2.mosoo_backend.order.entity.Order;
 import com.team2.mosoo_backend.order.entity.OrderStatus;
 import com.team2.mosoo_backend.order.mapper.OrderMapper;
@@ -23,10 +20,12 @@ import com.team2.mosoo_backend.post.mapper.PostMapper;
 import com.team2.mosoo_backend.user.dto.GosuResponseDto;
 import com.team2.mosoo_backend.user.entity.Gosu;
 import com.team2.mosoo_backend.user.entity.UserInfo;
+import com.team2.mosoo_backend.user.entity.Users;
 import com.team2.mosoo_backend.user.repository.GosuRepository;
 import com.team2.mosoo_backend.user.repository.UserInfoRepository;
 import com.team2.mosoo_backend.user.repository.UserRepository;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -79,6 +78,31 @@ public class OrderService {
 
         return new OrderListResponseDto(orderResponseDtoList);
 
+    }
+
+    // 고수가 제공하는 주문 조회 (급하게 새로 메서드 만들었습니다.. TODO: 위의 메서드와 합치기(?) )
+    public OrderGosuListResponseDto getAllGosuOrders(UserDetails userDetails) {
+        Long loginGosuId = Long.parseLong(userDetails.getUsername());
+        List<Order> orders = orderRepository.findOrdersByChatRoomGosuId(loginGosuId, List.of(OrderStatus.PAID, OrderStatus.SERVICE_COMPLETED));
+        List<OrderGosuResponseDto> orderGosuResponseDtoList = new ArrayList<>();
+        for(Order order : orders) {
+            ChatRoom chatRoom = order.getChatRoom();
+            Users user = userRepository.findById(chatRoom.getUserId()).orElseGet(() -> null);
+            String userFullName = (user != null) ? user.getFullName() : "찾을 수 없는 회원";
+            String userEmail = (user != null) ? user.getEmail() : null;
+            String workDate;
+            if(chatRoom.getBid() != null){
+                workDate = chatRoom.getBid().getDate().toString();
+            }else{
+                workDate = chatRoom.getPost().getDuration();
+            }
+            PaymentEntity paymentEntity = paymentRepository.findPaymentEntityByMerchantUid(order.getMerchantUid()).orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+            BigDecimal price = paymentEntity.getPrice();
+            LocalDateTime paidAt = paymentEntity.getCreatedAt();
+            OrderStatus orderStatus = order.getOrderStatus();
+            orderGosuResponseDtoList.add(new OrderGosuResponseDto(userFullName, userEmail, workDate, price, orderStatus, paidAt));
+        }
+        return new OrderGosuListResponseDto(orderGosuResponseDtoList);
     }
 
     public OrderDetailsResponseDto createOrder(Long chatroomId) {

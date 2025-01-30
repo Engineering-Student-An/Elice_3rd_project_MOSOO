@@ -1,10 +1,6 @@
 package com.team2.mosoo_backend.order.controller;
 
-import com.team2.mosoo_backend.order.dto.OrderDetailsResponseDto;
-import com.team2.mosoo_backend.order.dto.OrderListResponseDto;
-import com.team2.mosoo_backend.order.dto.OrderResponseDto;
-import com.team2.mosoo_backend.order.dto.OrderStatusUpdateResponseDto;
-import com.team2.mosoo_backend.order.dto.UpdateOrderRequestDto;
+import com.team2.mosoo_backend.order.dto.*;
 import com.team2.mosoo_backend.order.entity.OrderStatus;
 import com.team2.mosoo_backend.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +28,15 @@ public class OrderController {
     ) {
         OrderListResponseDto responseDto = orderService.getAllOrders(orderStatus, userDetails);
 
+        return ResponseEntity.status(200).body(responseDto);
+    }
+
+    @Operation(summary = "고수의 주문서 조회", description = "고수가 주문 받은 전체 내역을 조회합니다.")
+    @GetMapping("/gosu")
+    public ResponseEntity<OrderGosuListResponseDto> getAllGosuOrders(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        OrderGosuListResponseDto responseDto = orderService.getAllGosuOrders(userDetails);
         return ResponseEntity.status(200).body(responseDto);
     }
 

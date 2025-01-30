@@ -252,7 +252,8 @@ class ChatRoomServiceTest {
         given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
         given(chatRoomUtils.validateChatRoomOwnership(any(), any())).willReturn(spyChatRoom);
         given(applicationContext.getBean(SimpMessagingTemplate.class)).willReturn(messagingTemplate);
-        given(chatMessageMapper.toEntity(any())).willReturn(chatMessage);
+        given(redisTemplate.opsForList()).willReturn(listOperations);
+        when(listOperations.leftPush(anyString(), any())).thenReturn(0L);
 
         // when
         ChatRoomDeleteResponseDto result = chatRoomService.quitChatRoom(user.getId(), chatRoomId);

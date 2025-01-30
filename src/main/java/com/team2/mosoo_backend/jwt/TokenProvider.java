@@ -1,9 +1,15 @@
 package com.team2.mosoo_backend.jwt;
 
+import com.team2.mosoo_backend.oath.entity.RefreshToken;
+import com.team2.mosoo_backend.oath.repository.RefreshTokenRepository;
+import com.team2.mosoo_backend.oath.util.RefreshTokenCookieUtil;
 import com.team2.mosoo_backend.user.dto.TokenDto;
+import com.team2.mosoo_backend.user.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +24,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,23 +35,34 @@ public class TokenProvider {
     private static final String BEARER_TYPE = "bearer";
 
     public static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30L;
-//    public static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 30;
     public static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60L * 24 * 7;
 
     private final Key key;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenCookieUtil refreshTokenCookieUtil;
+    private final UserRepository userRepository;
 
-
-    // 주의점: 여기서 @Value는 `springframework.beans.factory.annotation.Value`소속이다! lombok의 @Value와 착각하지 말것!
-    //     * @param secretKey
-    public TokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public TokenProvider(@Value("${jwt.secret}") String secretKey, RefreshTokenRepository refreshTokenRepository, RefreshTokenCookieUtil refreshTokenCookieUtil, UserRepository userRepository) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.refreshTokenCookieUtil = refreshTokenCookieUtil;
+        this.userRepository = userRepository;
     }
 
 
-    // 토큰DTO 생성
-    public TokenDto generateTokenDto(Authentication authentication) {
-        String accessToken = generateAccessToken(authentication);
+    // access token 생성
+    public TokenDto generateAccessToken(String userId) {
+
+        Date expiredDate = new Date(new Date().getTime() + ACCESS_TOKEN_EXPIRE_TIME);
+
+        String accessToken = Jwts.builder()
+                .setSubject(userId)
+                .claim(AUTHORITIES_KEY, userRepository.findById(Long.parseLong(userId)).get().getAuthority())
+                .setExpiration(expiredDate)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+
         return TokenDto.builder()
                 .grantType(BEARER_TYPE)
                 .accessToken(accessToken)
@@ -52,29 +70,20 @@ public class TokenProvider {
                 .build();
     }
 
-    public String generateAccessToken(Authentication authentication) {
-        return generateToken(authentication, ACCESS_TOKEN_EXPIRE_TIME);
-    }
+    // refresh token 생성
+    public String generateRefreshToken(HttpServletRequest request, HttpServletResponse response, String userId) {
 
-    // 1. refresh token 발급
-    public String generateRefreshToken(Authentication authentication) {
-        return generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
-    }
+        // refresh token의 값에 해당하는 랜덤 문자열
+        String refreshTokenUUID = UUID.randomUUID().toString();
 
-    private String generateToken(Authentication authentication, long expireTime) {
-        Date now = new Date();
-        Date expiredDate = new Date(now.getTime() + expireTime);
+        // refresh token을 redis에 저장
+        RefreshToken refreshToken = new RefreshToken(userId, refreshTokenUUID);
+        refreshTokenRepository.save(refreshToken);
 
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining());
+        // 쿠키에 refresh token 추가
+        refreshTokenCookieUtil.addRefreshTokenToCookie(request, response, refreshTokenUUID);
 
-        return Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authorities)
-                .setExpiration(expiredDate)
-                .signWith(key, SignatureAlgorithm.HS512)
-                .compact();
+        return refreshTokenUUID;
     }
 
     public Authentication getAuthentication(String accessToken) {
@@ -94,7 +103,7 @@ public class TokenProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
         try {
             Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);
             return true;

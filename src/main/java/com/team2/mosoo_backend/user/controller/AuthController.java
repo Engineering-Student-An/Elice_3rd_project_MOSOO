@@ -1,7 +1,5 @@
 package com.team2.mosoo_backend.user.controller;
 
-
-import com.team2.mosoo_backend.oath.util.RefreshTokenCookieUtil;
 import com.team2.mosoo_backend.user.dto.TokenDto;
 import com.team2.mosoo_backend.user.dto.UserRequestDto;
 import com.team2.mosoo_backend.user.dto.UserResponseDto;
@@ -20,8 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
     private final AuthService authService;
-    private final RefreshTokenCookieUtil refreshTokenCookieUtil;
 
     // 회원가입
     @PostMapping("")

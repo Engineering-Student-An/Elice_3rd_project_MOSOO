@@ -71,16 +71,12 @@ public class SecurityConfig {
                 .requestMatchers("/");
     }
 
-
-    @Value("${DEPLOY_FRONT_URL}")
-    private String deployFrontUrl; // 필드로 주입
-
     // CORS 설정을 위한 Bean 정의
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", deployFrontUrl)); // 허용할 출처
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://mosooo.netlify.app")); // 허용할 출처
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH")); // 허용할 메서드
         configuration.setAllowCredentials(true); // 인증 정보 포함 여부
         configuration.setAllowedHeaders(List.of("*")); // 허용할 헤더
