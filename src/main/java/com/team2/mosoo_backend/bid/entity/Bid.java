@@ -42,6 +42,13 @@ public class Bid extends BaseEntity {
     @JoinColumn(name = "post_id")
     private Post post;
 
+    public void setPrice(int price) {
+        this.price = price;
+    }
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
     public void setSelected(boolean selected) {
         isSelected = selected;
     }

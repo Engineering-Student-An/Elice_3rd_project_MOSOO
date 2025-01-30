@@ -67,7 +67,7 @@ class ChatRoomControllerTest {
 
         List<ChatRoomResponseDto> list = new ArrayList<>();
         for (int i = 1; i < 6; i++) {
-            ChatRoomResponseDto dto = new ChatRoomResponseDto((long) i, i + "번 유저", i + "번 채팅", LocalDateTime.now(), false);
+            ChatRoomResponseDto dto = new ChatRoomResponseDto((long) i, i + "번 유저", i + "번 채팅", LocalDateTime.now(), false, 1L, "게시글 제목");
             list.add(dto);
         }
 

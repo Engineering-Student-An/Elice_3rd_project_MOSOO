@@ -63,6 +63,7 @@ public class ChatMessageService {
     }
 
     // 레디스에 채팅 저장 메서드
+    @Transactional
     public void saveChatMessageToRedis(StompHeaderAccessor accessor, Long chatRoomId, ChatMessageRequestDto chatMessageRequestDto) {
 
         // UserDetails가 WebSocket 메세지에서 역직렬화될 수 없음 => 직접 로그인 유저 id 가져오는 방법
@@ -73,6 +74,9 @@ public class ChatMessageService {
         userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         String redisKey = "chatRoom:" + chatRoomId + ":messages";
+
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+        chatRoom.setLastChatDate(chatMessageRequestDto.getCreatedAt());
 
         // 전송된 파일이 있다면 1. base64File 삭제 2. S3에 파일 업로드 3. content를 업로드 된 url로 설정
         if(chatMessageRequestDto.getBase64File() != null) {

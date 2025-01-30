@@ -21,11 +21,12 @@ public class PostController {
     private final PostService postService;
 
     // 게시글 전체 조회 요청
-    @GetMapping("/posts")
+    @GetMapping("/admin/posts")
     public ResponseEntity<PostListResponseDto> getAllPosts(
-            @RequestParam(required = false, value = "page", defaultValue = "1") @Positive int page) {
+            @RequestParam(required = false, value = "page", defaultValue = "1") @Positive int page,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        PostListResponseDto postList = postService.getAllPosts(page);
+        PostListResponseDto postList = postService.getAllPosts(Long.parseLong(userDetails.getUsername()), page);
 
         return ResponseEntity.status(200).body(postList);
     }
@@ -112,5 +113,10 @@ public class PostController {
         return ResponseEntity.status(201).body(postResponseDto);
     }
 
+    @PutMapping("/{postId}")
+    public ResponseEntity<PostResponseDto> updatePostStatus(@AuthenticationPrincipal UserDetails userDetails, @PathVariable("postId") Long userId, @RequestParam("status") String status) {
+        PostResponseDto postResponseDto = postService.updateStatus(Long.parseLong(userDetails.getUsername()), userId, status);
+        return ResponseEntity.status(201).body(postResponseDto);
+    }
 
 }

@@ -13,7 +13,7 @@ public interface PostMapper {
 
     PostResponseDto postToPostResponseDto(Post post);
 
-    Post createPostRequestDtoToPost(CreatePostRequestDto CreatePostRequest);
+    Post createPostRequestDtoToPost(CreatePostRequestDto CreatePostRequestDto);
 
     CreatePostResponseDto postToCreatePostResponseDto(Post post);
 

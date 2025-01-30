@@ -5,7 +5,6 @@ import com.team2.mosoo_backend.exception.CustomException;
 import com.team2.mosoo_backend.exception.ErrorCode;
 import com.team2.mosoo_backend.jwt.TokenProvider;
 
-import com.team2.mosoo_backend.oath.repository.RefreshTokenRepository;
 import com.team2.mosoo_backend.oath.util.RefreshTokenCookieUtil;
 import com.team2.mosoo_backend.user.dto.TokenDto;
 import com.team2.mosoo_backend.user.dto.UserRequestDto;
@@ -63,21 +62,13 @@ public class AuthService {
 
     public TokenDto login(HttpServletRequest request, HttpServletResponse response, UserRequestDto requestDto) {
 
-        // 비밀번호 미 입력 시
-        if(requestDto.getPassword() == null || requestDto.getPassword().isEmpty()) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
-        }
-
         UsernamePasswordAuthenticationToken authenticationToken = requestDto.toAuthentication();
         Authentication authentication = managerBuilder.getObject().authenticate(authenticationToken);
 
-        TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-        String refreshTokenValue = tokenProvider.generateRefreshToken(authentication);
-
+        // 매번 로그인 할 때마다 access token, refresh token 발급
+        TokenDto tokenDto = tokenProvider.generateAccessToken(authentication.getName());
         Users users = userRepository.findByEmail(requestDto.getEmail()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        refreshTokenCookieUtil.saveRefreshToken(users.getId(), refreshTokenValue);
-        refreshTokenCookieUtil.addRefreshTokenToCookie(request, response, refreshTokenValue); // 리프레시 토큰을 쿠키에 추가
+        tokenProvider.generateRefreshToken(request, response, users.getId().toString());
 
         return tokenDto;
     }

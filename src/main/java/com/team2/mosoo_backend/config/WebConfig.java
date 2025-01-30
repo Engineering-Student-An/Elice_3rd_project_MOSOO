@@ -10,8 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     private static final String DEVELOP_FRONT_ADDRESS = "http://localhost:3000";
 
-    @Value("${DEPLOY_FRONT_URL}")
-    private String DEPLOY_FRONT_URL;
+    private static final String DEPLOY_FRONT_URL = "https://mosooo.netlify.app";
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {

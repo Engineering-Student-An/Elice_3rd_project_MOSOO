@@ -39,7 +39,7 @@ public class Gosu {
  @Column(nullable = false)
  private String gosuInfoPhone; // 기술 제공 번호
 
- @ManyToOne
+ @ManyToOne(fetch = FetchType.EAGER)
  @JoinColumn(name = "category_id")
  private Category category; // 기술 제공 카테고리
 

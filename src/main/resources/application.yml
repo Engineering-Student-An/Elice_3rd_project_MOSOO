@@ -39,10 +39,7 @@ spring:
     import:
       - s3bucket.yml
 
-  portone:
-    imp_key : ${secret.impKey}
-    imp_secret: ${secret.impSecret}
-    
+
   security:
     oauth2:
       client:
@@ -53,10 +50,11 @@ spring:
             scope:
               - email
               - profile
+            redirect-uri: https://5p3xdi7420.execute-api.ap-northeast-2.amazonaws.com/login/oauth2/code/google
 
   data:
     redis:
-      host: redis
+      host: ${REDIS_HOST}
       port: 6379
 
 jwt:
@@ -64,8 +62,11 @@ jwt:
 
 default:
   image:
-    url: https://mosoobucket.s3.ap-northeast-2.amazonaws.com/test/752d474e-8c1d-45a8-bd77-b426f61e204e-d283f188e2c88f02.png
+    url: https://mosoobucket.s3.ap-northeast-2.amazonaws.com/test/%E1%84%83%E1%85%A1%E1%84%8B%E1%85%AE%E1%86%AB%E1%84%85%E1%85%A9%E1%84%83%E1%85%B3+(8).jpeg
 
 secret:
-  impKey: 5561133411260273
-  impSecret: 5sw3JWEyzRDwt4G0Op58u2MeUcbcc7ODoLz3bshwnDjBDvRmrm9AVoCM6KaA33lEvgNeUj162Xt593gh
+  impKey: ${IMP_KEY}
+  impSecret: ${IMP_SECRET}
+#  DOMAIN_URL: ${DOMAIN_URL}
+server:
+  port: 8081

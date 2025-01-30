@@ -1,34 +1,20 @@
 package com.team2.mosoo_backend.oath.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Getter
-@Entity
-public class RefreshToken {
+@Getter @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@RedisHash(value = "refreshToken", timeToLive = 60 * 60 * 24 * 7)   // ttl 7일로 설정
+public class RefreshToken{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "refreshtoken_id", updatable = false)
-    private Long id;
+    private String userId;
 
-    @Column(name = "member_id", nullable = false, unique = true)
-    private Long memberId;
-
-    @Column(name = "refresh_token", nullable = false)
+    @Indexed
     private String refreshToken;
 
-    public RefreshToken(Long memberId, String refreshToken) {
-        this.memberId = memberId;
-        this.refreshToken = refreshToken;
-    }
-
-    public RefreshToken update(String newRefreshToken) {
-        this.refreshToken = newRefreshToken;
-
-        return this;
-    }
 }
