@@ -27,8 +27,7 @@ public class GosuInfoResponseDto {
     private String gosuInfoPhone;
     private Long categoryId;
 
-    @NotNull
-    @Column(nullable = false)
+    @NotNull @Column(nullable = false)
     private LocalDateTime createdAt; // 생성일
 
     private LocalDateTime deletedAt; // 탈퇴 시간
