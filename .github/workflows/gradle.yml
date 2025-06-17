@@ -24,7 +24,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '17'  # Java 버전 변경
+          java-version: '17'       # Java 버전 변경
           distribution: 'temurin'  # Java 배포판 추가
 
       # Gradle Build를 위한 권한 부여
