@@ -6,8 +6,6 @@ on:
   # develop 브랜치에 push나 pull request 발생 시
   push:
     branches: [ "develop" ]
-#  pull_request:
-#    branches: [ "develop" ]
 
 # 위 이벤트 발생 시 실행될 작업들
 jobs:
